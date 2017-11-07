@@ -1,0 +1,16 @@
+Quais os dez maiores fundos de investimento ativos (com movimentações de captação e resgate) em 2017 (considerando o patrimônio líquido médio mensal)? (concatenar csv: denominação social, gestor, classe, tipo de fundo)
+
+Quais os dez fundos de investimento ativos mais rentáveis (rentabilidade bruta acumulada) em 2017? (calcular a partir do valor da cota entre o primeiro dia e o último dia)
+
+Quais os dez fundos de investimento ativos com maiores números de cotistas (médio) em 2017?(última coluna do csv; fazer média, mediana e desvio padrão anuais. Se a média estiver muito longe da mediana, tem outliers)
+
+Quais são os dez fundos de menor oscilação negativa diária de valor de quota em 2017?(olhar a cota dia-a-dia e somar as oscilações negativas)
+
+Quais são os dez fundos ativos em 2017 em que foi realizado o maior volume de resgate (média mensal em R$)?(ver todos os ativos adicionando coluna do segundo dataset)
+
+Quais são os dez fundos ativos em 2017 em que foi realizado o maior volume de captação (média mensal R$)? (mudar pra coluna de volume de captação, ver anterior;)
+
+Existem correlações interessantes para os fundos de investimento, considerando: o património médio mensal, a taxa de
+rentabilidade acumulada, a variabilidade da rentabilidade, o número de cotistas, o volume de resgate e de captação?
+
+para gerar a matriz de correlação, fazer a regularização(normalização) entre toda a matriz e depois calcular novamente
