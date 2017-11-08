@@ -6,11 +6,11 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-import os
+import os #not used
 
-import multiprocessing
+import multiprocessing # Package for parallelization
 
-os.chdir('/home/andhros/PythonProjects/DataScience_PCS_5031')
+#os.chdir('/home/andhros/PythonProjects/DataScience_PCS_5031') 
 
 def processFile(filename):
     print('parsing', filename)
@@ -31,11 +31,14 @@ df = pd.merge(df_cvm, df_denom, how = 'left', left_on = 'CNPJ_FUNDO', right_on =
 
 df['DT_COMPTC'] = pd.to_datetime(df['DT_COMPTC'])
 
-num_processes = multiprocessing.cpu_count()-1
+# Counting the number of threads minus 1 (sparing one processor to prevent cluttering the pc)
+num_processes = multiprocessing.cpu_count()-1 
 
-chunk_size = int(df.shape[0]/num_processes)
+# calculating the size of the dataframe divisions named as "chunks"
+chunk_size = int(df.shape[0]/num_processes) 
 
-chunks = [df.ix[df.index[i:i + chunk_size]] for i in range(0, df.shape[0], chunk_size)]
+# actually dividing the dataframe into chunks (works even if the total index is not divisible by "num_processes")
+chunks = [df.ix[df.index[i:i + chunk_size]] for i in range(0, df.shape[0], chunk_size)] 
 
 # # ------------------------------------------------------------------------------------------------- #
 # # This is the answer to Question 1 - do we need to sum the values or to apply mean to values?
@@ -44,6 +47,7 @@ df_1 = pd.DataFrame([])
 
 data_holes_1 = 0
 
+# Function to solve Question 1 only
 def func(d) :
 # removing dead funds
     for ind, row in d.iterrows() :
@@ -55,16 +59,18 @@ def func(d) :
             data_holes = data_holes_1 + 1
     return(d)
 
+# creation of multiprocessing Pool
 pool = multiprocessing.Pool(processes=num_processes)
 
+# applying the function to the chunks of the dataframe. Each chunk will generate its own process.
 result = pool.map(func, chunks)
 
+# converting the calculated chunks back into original dataframe format
 for i in range(len(result)):
 
     df.ix[result[i].index] = result[i]
 
 Pergunta_1 = df_1.groupby('DENOM_SOCIAL').mean().sort_values('VL_TOTAL', ascending=False).head(10).\
     filter(['DENOM_SOCIAL','VL_TOTAL'])
-
 
 Pergunta_1.to_csv('Pergunta_1.csv')
