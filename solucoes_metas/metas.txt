@@ -1,0 +1,127 @@
+1. Quais os dez maiores fundos de investimento ativos (com movimentações de captação e resgate) em 2017 (considerando o patrimônio líquido médio mensal)? (concatenar csv: denominação social, gestor, classe, tipo de fundo)
+
+2. Quais os dez fundos de investimento ativos mais rentáveis (rentabilidade bruta acumulada) em 2017? (calcular a partir do valor da cota entre o primeiro dia e o último dia)
+
+	Nesta questão deve-se calcular o percentual.
+	Filtrar somente os fundos ativos.
+
+3. Quais os dez fundos de investimento ativos com maiores números de cotistas (médio) em 2017?(última coluna do csv; fazer média, mediana e desvio padrão anuais. Se a média estiver muito longe da mediana, tem outliers)
+
+4. Quais são os dez fundos de menor oscilação negativa diária de valor de quota em 2017?(olhar a cota dia-a-dia e somar as oscilações negativas)
+	
+	De um dia (dia atual - menos o dia anterior) para outro se a cota cair (acumula) caso contrario descarta.
+
+5. Quais são os dez fundos ativos em 2017 em que foi realizado o maior volume de resgate (média mensal em R$)?(ver todos os ativos adicionando coluna do segundo dataset)
+
+	(volume de resgate / patrimonio liquido ) = razao relativa de esvaziamento do fundo (TUDO MEDIA)
+	(volume de resgate / numero de cotistas ) = esvaziamento por cotista
+
+6. Quais são os dez fundos ativos em 2017 em que foi realizado o maior volume de captação (média mensal R$)? (mudar pra coluna de volume de captação, ver anterior;)
+
+7. Existem correlações interessantes para os fundos de investimento, considerando: (sempre fundos ativos)
+	a. o património médio mensal, 
+	b. a taxa de rentabilidade bruta acumulada (percentual questao 2), 
+	c. a variabilidade da rentabilidade (volatilidade)
+	d. o número de cotistas  (MEDIA)
+	e. o volume de resgate (MEDIO)
+	f. o volume de captação (MEDIO)
+
+OBSERVACAO:
+
+c. (patrimonio liquido médio) depois calcula o desvio padrao (relativo) / media do fundo.
+( desvio / media ) * 100 (percentual obtido é o grau de risco = medida de volatilidade)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+alan@biggy.com.br
+
+Big Data
+	como armazena, processa e extrai (grande volume de dados)
+Editora Spring (Journal sobre Big Data)
+
+Hadoop!
+
+
+StackOverflow, big data para analisar os posts do dia.
+
+
+NoSQl (NotOnly SQL)
+	Abre mao da consistencia para entregar rapido. (Teorema CAP) - Eventual Concistency
+
+
+RDBMS 
+	Insert locka a tabela para garantir a integridade.
+
+
+NoSQL types
+	Indice secundario (busca camisa -> depois busca SKUS (camisa, cor, tamanho)) Scan
+
+
+Hadoop (ETL)
+ 
+
+
+BigTable (Google procurar o artigo)
+ biggy -> tem um javascript customizado (parecido com o google analytics) que quando o usuario authentica ele obtem os dados do usuario para iniciar o processo de recomendação.	
+
+DataWarehouse x BigData (Pesquisar)
+
+DataScience (especialista em ML).
+DataScience Engineer (configuracao e setup de bancos de dados, arquitetura para selecionar as melhores ferramentas).
+DataScience Developer (programa os modelos que o DataScience determina).
+
+
+Friends Relationship
+	JOIN
+	Embedding & Linking 
+
+
+Master
+	Recebe todos os inserts e garante que os slaves estarao atualizados.
+
+Slave
+	As consultas podem ser recebidas pelo slave.
+
+
+Embedding: coisas que nao coexistem sozinas (product x offers [sku])
+Links: bom para updates (pode ter menos atualizacoes, nao sao carregados tudo junto)
+
+
+
+Redis x Memcache (pesquisar)
+	Palestra stackoverflow (sobre redis, cache query results, key:query, value:resultSet)
+
+
+
+mongo: todos os detalhes do produto
+Redis: api de recomendacao (vitrine) é uma versao simplificada do mongo. (está em memória)
+
+
+Hadoop (Plataforma, existem muitos frameworks no ecossistemas)
+	Hadoop, processamento paralelo e armezamento distribuido
+		Map Reduce >
+
+
+Hadoop
+	Spark está paa o MapReduce, mas fica em memoria (100 mais rapido)
+
+YARN = Apache Mesos (dizer ser o melhor entre os 2)
