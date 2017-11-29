@@ -46,6 +46,15 @@ inf_diario_2017_FILTERED = inf_diario_2017_FILTERED.drop('ID', axis=1)
 
 
 
+# Generating NR_COTST Mean
+ctstMean = inf_diario_2017_FILTERED.copy()
+ctstMean = ctstMean.groupby('CNPJ_FUNDO', as_index=False).agg({'NR_COTST': ['mean'] })
+ctstMean.columns = ctstMean.columns.droplevel(level=1)
+ctstMean.columns.values[1] = 'NR_COTST_MEAN'
+ctstMean = ctstMean.round( { 'NR_COTST_MEAN': 2 } )
+
+
+
 # ---------------------------------------------- Questao 2 ----------------------------------------------
 #                                                                                                       #
 # -------------------------------------------------------------------------------------------------------
@@ -97,11 +106,18 @@ result['RENTAB_BRUTA_ACMULAD_PERCENT'] = result['RENTAB_BRUTA_ACMULAD'] * 100 / 
 result = result.round( { 'RENTAB_BRUTA_ACMULAD_PERCENT': 2 } )
 result.sort_values(by=['RENTAB_BRUTA_ACMULAD_PERCENT'], ascending=False, inplace=True)
 
+
+# Merge with NR_COTST Mean
+pergunta2 = result.merge(ctstMean, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO', how='inner')
+
+
 # Merge with Denominacao do Fundo
-pergunta2 = result.merge(fdo_invsti_regstr, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO', how='left')
-pergunta2 = pergunta2.loc[0:,['CNPJ_FUNDO', 'DT_COMPTC_MIN', 'VL_QUOTA_MIN', 'DT_COMPTC_MAX', 'VL_QUOTA_MAX', 'RENTAB_BRUTA_ACMULAD','RENTAB_BRUTA_ACMULAD_PERCENT', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'RENTAB_FUNDO', 'ADMIN']]
+pergunta2 = pergunta2.merge(fdo_invsti_regstr, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO', how='left')
+pergunta2 = pergunta2.loc[0:,['CNPJ_FUNDO', 'DT_COMPTC_MIN', 'VL_QUOTA_MIN', 'DT_COMPTC_MAX', 'VL_QUOTA_MAX', 'RENTAB_BRUTA_ACMULAD','RENTAB_BRUTA_ACMULAD_PERCENT', 'NR_COTST_MEAN', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'RENTAB_FUNDO', 'ADMIN']]
 pergunta2 = pergunta2.loc[pergunta2['SIT'] == 'EM FUNCIONAMENTO NORMAL' ]
 pergunta2.sort_values(by=['RENTAB_BRUTA_ACMULAD_PERCENT'], ascending=False, inplace=True )
+
+
 pergunta2.head(20).to_csv("__Pergunta_2__.csv", sep=";", encoding="ISO-8859-1")
 
 
@@ -157,9 +173,16 @@ inf_diario_2017_oscl_summary['OCCUR_NEG'] = inf_diario_2017_oscl_summary['OCCUR_
 inf_diario_2017_oscl_summary = inf_diario_2017_oscl_summary[inf_diario_2017_oscl_summary.OSCL_OCCUR_NEG < 0.0]
 
 
+# Merge with NR_COTST Mean
+pergunta4 = inf_diario_2017_oscl_summary.merge(ctstMean, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO', how='inner')
+
+
 # Merge with Denominacao do Fundo
-pergunta4 = inf_diario_2017_oscl_summary.merge(fdo_invsti_regstr, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO', how='left')
+pergunta4 = pergunta4.merge(fdo_invsti_regstr, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO', how='left')
 pergunta4 = pergunta4.loc[pergunta4['SIT'] == 'EM FUNCIONAMENTO NORMAL' ]
+
+
+pergunta4 = pergunta4.loc[0:,['CNPJ_FUNDO', 'OCCUR', 'OCCUR_NEG', 'OSCL_OCCUR_NEG', 'NR_COTST_MEAN', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'RENTAB_FUNDO', 'ADMIN']]
 
 
 pergunta4.sort_values(by=['OSCL_OCCUR_NEG'], ascending=False, inplace=True)
