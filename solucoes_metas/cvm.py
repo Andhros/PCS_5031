@@ -5,6 +5,10 @@ import seaborn as sns
 import matplotlib.pyplot as pl
 
 
+import os
+os.chdir('PATH_TO_CSV_FILES')
+
+
 # https://www.shanelynn.ie/summarising-aggregation-and-grouping-data-in-python-pandas/
 # http://chris.friedline.net/2015-12-15-rutgers/lessons/python2/03-data-types-and-format.html
 # https://stackoverflow.com/questions/14059094/i-want-to-multiply-two-columns-in-a-pandas-dataframe-and-add-the-result-into-a-n
@@ -26,40 +30,38 @@ inf_diario_2017['CAPTC_DIA'] = inf_diario_2017['CAPTC_DIA'].astype('float64')
 inf_diario_2017['RESG_DIA'] = inf_diario_2017['RESG_DIA'].str.replace(',', '')
 inf_diario_2017['RESG_DIA'] = inf_diario_2017['RESG_DIA'].astype('float64')
 
-inf_diario_2017_FILTERED = inf_diario_2017.groupby('CNPJ_FUNDO', as_index=False).agg( {"NR_COTST": [sum], "CAPTC_DIA": [sum], "RESG_DIA": [sum]} )
-
-inf_diario_2017_FILTERED = inf_diario_2017_FILTERED.loc[inf_diario_2017['NR_COTST'] >= 10 ]
-inf_diario_2017_FILTERED = inf_diario_2017_FILTERED.loc[inf_diario_2017['CAPTC_DIA'] > 0.0 ]
-inf_diario_2017_FILTERED = inf_diario_2017_FILTERED.loc[inf_diario_2017['RESG_DIA'] > 0.0 ]
-
+inf_diario_2017_FILTERED = inf_diario_2017.groupby('CNPJ_FUNDO', as_index=False).agg( {"NR_COTST": ['mean'], "CAPTC_DIA": ['mean'], "RESG_DIA": ['mean']} )
 inf_diario_2017_FILTERED.columns = inf_diario_2017_FILTERED.columns.droplevel(level=0)
+
 inf_diario_2017_FILTERED.columns.values[0] = 'CNPJ_FUNDO'
-inf_diario_2017_FILTERED.columns.values[1] = 'CAPTC_DIA_AGGSUM'
-inf_diario_2017_FILTERED.columns.values[2] = 'RESG_DIA_AGGSUM'
-inf_diario_2017_FILTERED.columns.values[3] = 'NR_COTST_AGGSUM'
+inf_diario_2017_FILTERED.columns.values[1] = 'CAPTC_DIA_MEAN'
+inf_diario_2017_FILTERED.columns.values[2] = 'RESG_DIA_MEAN'
+inf_diario_2017_FILTERED.columns.values[3] = 'NR_COTST_MEAN'
+
+inf_diario_2017_FILTERED = inf_diario_2017_FILTERED.loc[inf_diario_2017_FILTERED['NR_COTST_MEAN'] >= 10 ]
+inf_diario_2017_FILTERED = inf_diario_2017_FILTERED.loc[inf_diario_2017_FILTERED['CAPTC_DIA_MEAN'] > 0.0 ]
+inf_diario_2017_FILTERED = inf_diario_2017_FILTERED.loc[inf_diario_2017_FILTERED['RESG_DIA_MEAN'] > 0.0 ]
+
+
+inf_diario_2017_FILTERED = inf_diario_2017_FILTERED.round( { 'NR_COTST_MEAN': 2 } )
+
+# NR_COTST Mean
+ctstMean = inf_diario_2017_FILTERED.copy()
 
 ix1 = inf_diario_2017.set_index(['CNPJ_FUNDO']).index
 ix2 = inf_diario_2017_FILTERED.set_index(['CNPJ_FUNDO']).index
 
-inf_diario_2017_FILTERED = inf_diario_2017[ix1.isin(ix2)]
-inf_diario_2017_FILTERED = inf_diario_2017_FILTERED.drop('ID', axis=1)
+temp = inf_diario_2017[ix1.isin(ix2)]
+temp = temp.drop('ID', axis=1)
 
 
-
-# Generating NR_COTST Mean
-ctstMean = inf_diario_2017_FILTERED.copy()
-ctstMean = ctstMean.groupby('CNPJ_FUNDO', as_index=False).agg({'NR_COTST': ['mean'] })
-ctstMean.columns = ctstMean.columns.droplevel(level=1)
-ctstMean.columns.values[1] = 'NR_COTST_MEAN'
-ctstMean = ctstMean.round( { 'NR_COTST_MEAN': 2 } )
-
-
+ctstMean.sort_values(by=['NR_COTST_MEAN'], ascending=True, inplace=True)
 
 # ---------------------------------------------- Questao 2 ----------------------------------------------
 #                                                                                                       #
 # -------------------------------------------------------------------------------------------------------
 
-grouped = inf_diario_2017_FILTERED.groupby('CNPJ_FUNDO', as_index=False).agg({"DT_COMPTC": [min, max]})
+grouped = temp.groupby('CNPJ_FUNDO', as_index=False).agg({"DT_COMPTC": [min, max]})
 grouped = grouped.rename(columns={"min": "DT_COMPTC", "max": "DT_COMPTC_MAX", "": "CNPJ_FUNDO"})
 grouped.columns = grouped.columns.droplevel(level=0)
 
@@ -140,63 +142,85 @@ for index, row in pergunta2.head(20).iterrows(): generatecsv ( row['CNPJ_FUNDO']
 # -------------------------------------------------------------------------------------------------------
 
 
-inf_diario_2017_oscl = inf_diario_2017_FILTERED.copy()
+inf_diario_2017_oscl_neg = temp.copy()
 
-inf_diario_2017_oscl = inf_diario_2017_oscl.loc[0:,['CNPJ_FUNDO', 'DT_COMPTC', 'VL_QUOTA']]
-inf_diario_2017_oscl.sort_values(by=['CNPJ_FUNDO', 'DT_COMPTC'], inplace=True)
-inf_diario_2017_oscl['VL_QUOTA'] = inf_diario_2017_oscl['VL_QUOTA'].str.replace(',', '')
-inf_diario_2017_oscl['VL_QUOTA'] = inf_diario_2017_oscl['VL_QUOTA'].astype('float64')
-inf_diario_2017_oscl['VL_QUOTA_OSCL'] = inf_diario_2017_oscl.groupby(['CNPJ_FUNDO'])['VL_QUOTA'].transform(pd.Series.diff)
-inf_diario_2017_oscl.sort_values(by=['CNPJ_FUNDO', 'DT_COMPTC'], inplace=True)
-inf_diario_2017_oscl['VL_QUOTA_OSCL'] = inf_diario_2017_oscl['VL_QUOTA_OSCL'].fillna(0)
+inf_diario_2017_oscl_neg = inf_diario_2017_oscl_neg.loc[0:,['CNPJ_FUNDO', 'DT_COMPTC', 'VL_QUOTA']]
+inf_diario_2017_oscl_neg.sort_values(by=['CNPJ_FUNDO', 'DT_COMPTC'], inplace=True)
+inf_diario_2017_oscl_neg['VL_QUOTA'] = inf_diario_2017_oscl_neg['VL_QUOTA'].str.replace(',', '')
+inf_diario_2017_oscl_neg['VL_QUOTA'] = inf_diario_2017_oscl_neg['VL_QUOTA'].astype('float64')
+
+# inf_diario_2017_oscl['VL_QUOTA_OSC_NEG_PERCENT'] = inf_diario_2017_oscl.groupby(['CNPJ_FUNDO'])['VL_QUOTA'].transform(pd.Series.diff)
+inf_diario_2017_oscl_neg['VL_QUOTA_OSC_NEG_PERCENT'] = inf_diario_2017_oscl_neg.groupby(['CNPJ_FUNDO'])['VL_QUOTA'].pct_change()
+inf_diario_2017_oscl_neg['VL_QUOTA_OSC_NEG_PERCENT'] = inf_diario_2017_oscl_neg['VL_QUOTA_OSC_NEG_PERCENT'].fillna(0)
+
+# one = inf_diario_2017_oscl_neg.loc[inf_diario_2017_oscl_neg['CNPJ_FUNDO'] == '97.711.812/0001-87']
+
 
 # Summarizing
 
-#as_index=False ommits the CNPJ_FUNDO
-a = inf_diario_2017_oscl.groupby('CNPJ_FUNDO').apply(lambda x: pd.Series(dict(OCCUR = x.CNPJ_FUNDO.count())))
-b = inf_diario_2017_oscl[inf_diario_2017_oscl.VL_QUOTA_OSCL < 0.0].groupby('CNPJ_FUNDO').apply(
+
+a = inf_diario_2017_oscl_neg.groupby('CNPJ_FUNDO').apply(lambda x: pd.Series(dict(QTD_OCCUR = x.CNPJ_FUNDO.count())))
+b = inf_diario_2017_oscl_neg[inf_diario_2017_oscl_neg.VL_QUOTA_OSC_NEG_PERCENT < 0.0].groupby('CNPJ_FUNDO').apply(
     lambda x: pd.Series(
         dict(
-            OCCUR_NEG = x.VL_QUOTA_OSCL.count(),
-            OSCL_OCCUR_NEG = x.VL_QUOTA_OSCL.sum()
+            QTD_VL_QUOTA_OSC_NEG_PERCENT = x.VL_QUOTA_OSC_NEG_PERCENT.count(),
+            TOTAL_VL_QUOTA_OSC_NEG_PERCENT = x.VL_QUOTA_OSC_NEG_PERCENT.sum()
         )
     )
 )
 
+
 a = a.reset_index()
 b = b.reset_index()
 
-inf_diario_2017_oscl_summary = a.merge(b, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO', how='left')
-inf_diario_2017_oscl_summary['OSCL_OCCUR_NEG'] = inf_diario_2017_oscl_summary['OSCL_OCCUR_NEG'].fillna(0)
-inf_diario_2017_oscl_summary['OCCUR_NEG'] = inf_diario_2017_oscl_summary['OCCUR_NEG'].fillna(0)
-inf_diario_2017_oscl_summary['OCCUR_NEG'] = inf_diario_2017_oscl_summary['OCCUR_NEG'].astype(int)
-inf_diario_2017_oscl_summary = inf_diario_2017_oscl_summary[inf_diario_2017_oscl_summary.OSCL_OCCUR_NEG < 0.0]
+one = inf_diario_2017_oscl_neg.loc[inf_diario_2017_oscl_neg['CNPJ_FUNDO'] == '09.454.944/0001-03']
+
+inf_diario_2017_oscl_neg_summary = b.merge(a, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO', how='left')
+inf_diario_2017_oscl_neg_summary['QTD_VL_QUOTA_OSC_NEG_PERCENT'] = inf_diario_2017_oscl_neg_summary['QTD_VL_QUOTA_OSC_NEG_PERCENT'].fillna(0)
+inf_diario_2017_oscl_neg_summary['TOTAL_VL_QUOTA_OSC_NEG_PERCENT'] = inf_diario_2017_oscl_neg_summary['TOTAL_VL_QUOTA_OSC_NEG_PERCENT'].fillna(0)
+
+inf_diario_2017_oscl_neg_summary['QTD_VL_QUOTA_OSC_NEG_PERCENT'] = inf_diario_2017_oscl_neg_summary['QTD_VL_QUOTA_OSC_NEG_PERCENT'].astype(int)
+inf_diario_2017_oscl_neg_summary['TOTAL_VL_QUOTA_OSC_NEG_PERCENT'] = inf_diario_2017_oscl_neg_summary['TOTAL_VL_QUOTA_OSC_NEG_PERCENT'].astype('float64')
+
+inf_diario_2017_oscl_neg_summary = inf_diario_2017_oscl_neg_summary[inf_diario_2017_oscl_neg_summary.QTD_VL_QUOTA_OSC_NEG_PERCENT > 0]
+inf_diario_2017_oscl_neg_summary = inf_diario_2017_oscl_neg_summary[inf_diario_2017_oscl_neg_summary.TOTAL_VL_QUOTA_OSC_NEG_PERCENT < 0.0]
+
+# inf_diario_2017_oscl_neg_summary.sort_values(by=['CNPJ_FUNDO'])
 
 
 # Merge with NR_COTST Mean
-pergunta4 = inf_diario_2017_oscl_summary.merge(ctstMean, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO', how='inner')
+pergunta4 = inf_diario_2017_oscl_neg_summary.merge(ctstMean, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO', how='inner')
 
 
 # Merge with Denominacao do Fundo
 pergunta4 = pergunta4.merge(fdo_invsti_regstr, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO', how='left')
 pergunta4 = pergunta4.loc[pergunta4['SIT'] == 'EM FUNCIONAMENTO NORMAL' ]
+pergunta4 = pergunta4.loc[0:,['CNPJ_FUNDO', 'QTD_OCCUR', 'QTD_VL_QUOTA_OSC_NEG_PERCENT', 'TOTAL_VL_QUOTA_OSC_NEG_PERCENT', 'NR_COTST_MEAN', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'RENTAB_FUNDO', 'ADMIN']]
 
+# pergunta4.sort_values(by=['TOTAL_VL_QUOTA_OSC_NEG_PERCENT'], ascending=False, inplace=True)
+# pergunta4.head(20).to_csv("__Pergunta_4__DESC.csv", sep=";", encoding="ISO-8859-1")
 
-pergunta4 = pergunta4.loc[0:,['CNPJ_FUNDO', 'OCCUR', 'OCCUR_NEG', 'OSCL_OCCUR_NEG', 'NR_COTST_MEAN', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'RENTAB_FUNDO', 'ADMIN']]
-
-
-pergunta4.sort_values(by=['OSCL_OCCUR_NEG'], ascending=False, inplace=True)
-pergunta4.head(20).to_csv("__Pergunta_4__DESC.csv", sep=";", encoding="ISO-8859-1")
-
-pergunta4.sort_values(by=['OSCL_OCCUR_NEG'], ascending=True, inplace=True)
+pergunta4.sort_values(by=['TOTAL_VL_QUOTA_OSC_NEG_PERCENT'], ascending=True, inplace=True)
+pergunta4 = pergunta4.round( { 'TOTAL_VL_QUOTA_OSC_NEG_PERCENT': 2 } )
 pergunta4.head(20).to_csv("__Pergunta_4__ASC.csv", sep=";", encoding="ISO-8859-1")
 
+
+def generatecsvoscneg(CNPJ_FUNDO):
+    suffix = CNPJ_FUNDO.replace(".", "_").replace("-", "_").replace("/", "_") + ".csv"
+    csvName = "__Pergunta_4__" +  suffix
+    res = inf_diario_2017_oscl_neg.loc[inf_diario_2017_oscl_neg['CNPJ_FUNDO'] == CNPJ_FUNDO]
+    res.to_csv(csvName, sep=";", encoding="ISO-8859-1")
+
+
+pergunta4.sort_values(by=['TOTAL_VL_QUOTA_OSC_NEG_PERCENT'], ascending=True, inplace=True)
+
+for index, row in pergunta4.head(20).iterrows(): generatecsvoscneg( row['CNPJ_FUNDO'] )
 
 # ---------------------------------------------- Questao 7 ----------------------------------------------
 #                                                                                                       #
 # -------------------------------------------------------------------------------------------------------
 
-aggregated = inf_diario_2017_FILTERED.copy()
+aggregated = temp.copy()
 
 aggregated['VL_PATRIM_LIQ'] = aggregated['VL_PATRIM_LIQ'].str.replace(',', '')
 aggregated['VL_PATRIM_LIQ'] = aggregated['VL_PATRIM_LIQ'].astype('float64')
@@ -250,13 +274,15 @@ correlation.columns.values[1] = 'RESG_MEAN'
 correlation.columns.values[2] = 'CAPTC_MEAN'
 correlation.columns.values[3] = 'NR_COTST_MEAN'
 correlation.columns.values[4] = 'RENTAB_BRUTA'
-correlationTOP20.sort_values(by=['RENTAB_BRUTA'], ascending=False, inplace=True)
+
 
 corr = correlation.corr()
 corr.to_csv("__Pergunta_7__CORR_ALL.csv", sep=";", encoding="ISO-8859-1")
 
 
 correlationTOP20 = pergunta7.copy()
+correlationTOP20 = correlationTOP20.head(20).to_csv("__Pergunta_7__TOP20.csv", sep=";", encoding="ISO-8859-1")
+
 correlationTOP20 = correlationTOP20[['VL_PATRIM_LIQ_VAR_RENT', 'RESG_DIA_MEAN', 'CAPTC_DIA_MEAN', 'NR_COTST_MEAN', 'RENTAB_BRUTA_ACMULAD_PERCENT']]
 correlationTOP20.columns.values[0] = 'PATRIM_LIQ_VRENT'
 correlationTOP20.columns.values[1] = 'RESG_MEAN'
@@ -265,8 +291,6 @@ correlationTOP20.columns.values[3] = 'NR_COTST_MEAN'
 correlationTOP20.columns.values[4] = 'RENTAB_BRUTA'
 correlationTOP20.sort_values(by=['RENTAB_BRUTA'], ascending=False, inplace=True)
 
-
-correlationTOP20.head(20).to_csv("__Pergunta_7__TOP20.csv", sep=";", encoding="ISO-8859-1")
 
 corrTop20 = correlationTOP20.head(20).corr()
 corrTop20.to_csv("__Pergunta_7__CORR_TOP20.csv", sep=";", encoding="ISO-8859-1")
