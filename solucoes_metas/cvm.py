@@ -31,12 +31,9 @@ inf_diario_2017['RESG_DIA'] = inf_diario_2017['RESG_DIA'].str.replace(',', '')
 inf_diario_2017['RESG_DIA'] = inf_diario_2017['RESG_DIA'].astype('float64')
 
 inf_diario_2017_FILTERED = inf_diario_2017.groupby('CNPJ_FUNDO', as_index=False).agg( {"NR_COTST": ['mean'], "CAPTC_DIA": ['mean'], "RESG_DIA": ['mean']} )
-inf_diario_2017_FILTERED.columns = inf_diario_2017_FILTERED.columns.droplevel(level=0)
+inf_diario_2017_FILTERED.columns = inf_diario_2017_FILTERED.columns.droplevel(level=1)
+inf_diario_2017_FILTERED = inf_diario_2017_FILTERED.rename(columns={"CAPTC_DIA": "CAPTC_DIA_MEAN", "RESG_DIA": "RESG_DIA_MEAN", "NR_COTST": "NR_COTST_MEAN"})
 
-inf_diario_2017_FILTERED.columns.values[0] = 'CNPJ_FUNDO'
-inf_diario_2017_FILTERED.columns.values[1] = 'CAPTC_DIA_MEAN'
-inf_diario_2017_FILTERED.columns.values[2] = 'RESG_DIA_MEAN'
-inf_diario_2017_FILTERED.columns.values[3] = 'NR_COTST_MEAN'
 
 inf_diario_2017_FILTERED = inf_diario_2017_FILTERED.loc[inf_diario_2017_FILTERED['NR_COTST_MEAN'] >= 10 ]
 inf_diario_2017_FILTERED = inf_diario_2017_FILTERED.loc[inf_diario_2017_FILTERED['CAPTC_DIA_MEAN'] > 0.0 ]
@@ -55,7 +52,9 @@ temp = inf_diario_2017[ix1.isin(ix2)]
 temp = temp.drop('ID', axis=1)
 
 
-ctstMean.sort_values(by=['NR_COTST_MEAN'], ascending=True, inplace=True)
+# ctstMean.sort_values(by=['NR_COTST_MEAN'], ascending=True, inplace=True)
+# one = ctstMean.loc[ctstMean['CNPJ_FUNDO'] == '13.199.100/0001-30']
+# one = inf_diario_2017_FILTERED.loc[inf_diario_2017_FILTERED['CNPJ_FUNDO'] == '13.199.100/0001-30']
 
 # ---------------------------------------------- Questao 2 ----------------------------------------------
 #                                                                                                       #
@@ -224,16 +223,10 @@ aggregated = temp.copy()
 
 aggregated['VL_PATRIM_LIQ'] = aggregated['VL_PATRIM_LIQ'].str.replace(',', '')
 aggregated['VL_PATRIM_LIQ'] = aggregated['VL_PATRIM_LIQ'].astype('float64')
-
-a = aggregated.groupby('CNPJ_FUNDO', as_index=False).agg({"VL_PATRIM_LIQ": ['mean', 'std'], 'NR_COTST': ['mean'], 'RESG_DIA': ['mean'], 'CAPTC_DIA': ['mean']})
+a = aggregated.groupby('CNPJ_FUNDO', as_index=False).agg({"VL_PATRIM_LIQ": ['mean', 'std'], 'RESG_DIA': ['mean'], 'CAPTC_DIA': ['mean']})
+a = a.rename(columns={"": "VL_PATRIM_LIQ_STD", "VL_PATRIM_LIQ": "VL_PATRIM_LIQ_MEAN", "CAPTC_DIA": "CAPTC_DIA_MEAN", "RESG_DIA": "RESG_DIA_MEAN" })
 a.columns = a.columns.droplevel(level=1)
-
-a.columns.values[1] = 'VL_PATRIM_LIQ_MEAN'
 a.columns.values[2] = 'VL_PATRIM_LIQ_STD'
-a.columns.values[3] = 'RESG_DIA_MEAN'
-a.columns.values[4] = 'CAPTC_DIA_MEAN'
-a.columns.values[5] = 'NR_COTST_MEAN'
-
 a['VL_PATRIM_LIQ_VAR_RENT'] = a['VL_PATRIM_LIQ_STD'] / a['VL_PATRIM_LIQ_MEAN'] * 100
 
 ########################################## Trecho da Pergunta 2 #######################################
@@ -245,6 +238,8 @@ summary = a.merge(b, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO', how='inner')
 
 # Merge with Denominacao do Fundo
 pergunta7 = summary.loc[summary['SIT'] == 'EM FUNCIONAMENTO NORMAL' ]
+
+
 pergunta7 = pergunta7[['CNPJ_FUNDO', 'VL_PATRIM_LIQ_VAR_RENT', 'RESG_DIA_MEAN', 'CAPTC_DIA_MEAN', 'NR_COTST_MEAN', 'RENTAB_BRUTA_ACMULAD_PERCENT']]
 
 
@@ -269,11 +264,11 @@ pergunta7.to_csv("__Pergunta_7__.csv", sep=";", encoding="ISO-8859-1")
 
 correlation = pergunta7.copy()
 correlation = correlation[['VL_PATRIM_LIQ_VAR_RENT', 'RESG_DIA_MEAN', 'CAPTC_DIA_MEAN', 'NR_COTST_MEAN', 'RENTAB_BRUTA_ACMULAD_PERCENT']]
-correlation.columns.values[0] = 'PATRIM_LIQ_VRENT'
-correlation.columns.values[1] = 'RESG_MEAN'
-correlation.columns.values[2] = 'CAPTC_MEAN'
-correlation.columns.values[3] = 'NR_COTST_MEAN'
-correlation.columns.values[4] = 'RENTAB_BRUTA'
+correlation = correlation.rename(
+    columns={"VL_PATRIM_LIQ_VAR_RENT": "PATRIM_LIQ_VRENT",
+             "RESG_DIA_MEAN": "RESG_MEAN",
+             "CAPTC_DIA_MEAN": "CAPTC_MEAN",
+             "RENTAB_BRUTA_ACMULAD_PERCENT": "RENTAB_BRUTA" })
 
 
 corr = correlation.corr()
@@ -281,22 +276,22 @@ corr.to_csv("__Pergunta_7__CORR_ALL.csv", sep=";", encoding="ISO-8859-1")
 
 
 correlationTOP20 = pergunta7.copy()
-correlationTOP20 = correlationTOP20.head(20).to_csv("__Pergunta_7__TOP20.csv", sep=";", encoding="ISO-8859-1")
-
 correlationTOP20 = correlationTOP20[['VL_PATRIM_LIQ_VAR_RENT', 'RESG_DIA_MEAN', 'CAPTC_DIA_MEAN', 'NR_COTST_MEAN', 'RENTAB_BRUTA_ACMULAD_PERCENT']]
-correlationTOP20.columns.values[0] = 'PATRIM_LIQ_VRENT'
-correlationTOP20.columns.values[1] = 'RESG_MEAN'
-correlationTOP20.columns.values[2] = 'CAPTC_MEAN'
-correlationTOP20.columns.values[3] = 'NR_COTST_MEAN'
-correlationTOP20.columns.values[4] = 'RENTAB_BRUTA'
+correlationTOP20 = correlationTOP20.rename(
+    columns={"VL_PATRIM_LIQ_VAR_RENT": "PATRIM_LIQ_VRENT",
+             "RESG_DIA_MEAN": "RESG_MEAN",
+             "CAPTC_DIA_MEAN": "CAPTC_MEAN",
+             "RENTAB_BRUTA_ACMULAD_PERCENT": "RENTAB_BRUTA" })
+
 correlationTOP20.sort_values(by=['RENTAB_BRUTA'], ascending=False, inplace=True)
+correlationTOP20.head(20).to_csv("__Pergunta_7__TOP20.csv", sep=";", encoding="ISO-8859-1")
 
 
 corrTop20 = correlationTOP20.head(20).corr()
 corrTop20.to_csv("__Pergunta_7__CORR_TOP20.csv", sep=";", encoding="ISO-8859-1")
 
 
-sns.heatmap(corr)
+# sns.heatmap(corr)
 sns.heatmap(corrTop20)
 
 
